@@ -226,6 +226,8 @@ input[type=file]{font:inherit;font-size:14px;color:var(--muted)}
 .viewer p{margin-top:10px;color:var(--muted);font-size:14px}
 .ai-band .wrap{align-items:start}
 .ai-points{display:grid;gap:14px}
+.ai-line{font-size:clamp(22px,2.6vw,30px);line-height:1.35;letter-spacing:-.02em;color:var(--band-muted);max-width:40ch}
+.ai-line b{color:var(--band-ink);font-weight:600}
 .ai-points p{color:var(--band-muted)}
 .ai-points b{color:var(--band-ink);font-weight:600}
 .estimate{border:1px solid var(--accent);padding:14px 16px;display:grid;gap:6px}
@@ -544,13 +546,10 @@ input:focus,textarea:focus,select:focus{outline:0;box-shadow:0 0 0 3px color-mix
   </section>
 
   <section class="motto ai-band" id="ai" aria-label="AI legal">
-    <div class="wrap">
+    <div class="wrap" style="grid-template-columns:1fr">
       <div>
         <p class="label" style="margin-bottom:14px">AI legal</p>
-        <blockquote>Рутину делает ИИ,<br>выводы делаю я</blockquote>
-      </div>
-      <div class="ai-points">
-        <p><b>Первичный разбор.</b> Каждую норму и каждый вывод проверяю лично.</p>
+        <p class="ai-line"><b>Первичный разбор.</b> Каждую норму и каждый вывод проверяю лично.</p>
       </div>
     </div>
   </section>
