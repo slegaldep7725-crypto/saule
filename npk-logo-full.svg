@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 440" role="img" aria-label="NPK Saule Turarova">
+<rect width="520" height="440" rx="36" fill="#0B2340"/>
+<defs><clipPath id="band"><rect x="0" y="128" width="520" height="134"/></clipPath></defs>
+
+<g fill="#fff">
+<polygon points="160,112 262,34 364,112 346,126 262,62 178,126"/>
+<rect x="97" y="128" width="30" height="134"/><rect x="165" y="128" width="30" height="134"/>
+<polygon points="97,128 131,128 195,262 161,262"/>
+<rect x="225" y="128" width="30" height="134"/>
+<rect x="337" y="128" width="30" height="134"/>
+<rect x="95" y="280" width="335" height="14"/>
+</g>
+<g fill="none" stroke="#fff" stroke-width="32" clip-path="url(#band)">
+
+<path d="M240,143 H282 a33,33 0 0 1 0,66 H240" stroke-width="30"/>
+<line x1="356" y1="210" x2="436" y2="118"/>
+<line x1="378" y1="182" x2="444" y2="272"/>
+</g>
+
+<text x="262" y="352" text-anchor="middle" fill="#fff" font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="38" font-weight="600" letter-spacing="3">SAULE TURAROVA</text>
+<text x="262" y="392" text-anchor="middle" fill="#A9B8CC" font-family="-apple-system,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="19" letter-spacing="7">LEGAL PRACTICE</text>
+</svg>
