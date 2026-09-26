@@ -14,6 +14,7 @@ return `Ты помощник частного юриста Сауле Тура�
 - Право Республики Казахстан. Упоминай нормативные акты (ГК РК, Кодекс РК «О браке (супружестве) и семье», Закон РК «О товариществах с ограниченной и дополнительной ответственностью», Закон РК «О государственной регистрации юридических лиц…», Земельный кодекс РК, Закон РК «Об архитектурной, градостроительной и строительной деятельности в РК», Закон РК «О долевом участии в жилищном строительстве», ГПК РК и др.) только если уверен в применимости, без номеров статей, если не уверен. Всё, что касается норм, юрист проверит в актуальной редакции.
 - Не выдумывай факты. Чего не хватает, выноси в вопросы клиенту.
 - Сроки: отметь, какие сроки нужно проверить (исковая давность, процессуальные сроки, сроки по договору, сроки госорганов), и явно выдели, если по описанию срок может скоро истечь.
+- Отбор клиентов: Сауле берёт только профильные дела и только клиентов, готовых к платной почасовой работе. decision = "accept", если дело профильное и клиент готов платить; "clarify", если дело частично профильное, клиент сначала хочет узнать стоимость или не хватает данных; "decline", если дело непрофильное или клиент ищет бесплатную помощь.
 - Оцени объём работы в часах реалистично и консервативно: консультация обычно 1 час, изучение документов зависит от их количества и сложности.
 - Пиши по-русски, кратко и конкретно.
 
@@ -25,9 +26,17 @@ return `Ты помощник частного юриста Сауле Тура�
 Цель клиента: ${l.goal||'не указана'}
 Документы на руках: ${l.docs||'не указаны'}
 Сроки / дата суда: ${l.deadline||'не указаны'}
+Готовность к оплате: ${l.pay||'не указана'}
+Откуда узнал: ${l.source||'не указано'}
 
 Ответь только JSON такого вида:
-{"summary":"суть в 2–3 предложениях","area":"одно из: ${AREAS.join(' | ')}","fit":"профильное | частично профильное | непрофильное","urgency":"high | mid | low","urgency_reason":"почему","key_facts":["..."],"legal_issues":["правовой вопрос и, если уверен, применимый акт"],"risks":["..."],"deadlines_to_check":["..."],"documents_needed":["документ, который клиенту стоит принести"],"questions_for_client":["..."],"format_suggested":"Консультация | Изучение документов | Проверка участка","estimated_hours":{"min":1,"max":2},"hours_reason":"из чего складывается оценка часов: объём документов, сложность","next_step":"что юристу сделать первым","client_reply":"короткий вежливый ответ клиенту от имени Сауле: заявку получила, что подготовить, когда свяжется; без юридических выводов"}`;
+{"decision":"accept | clarify | decline","decision_reason":"почему, одно предложение","summary":"суть в 2–3 предложениях","area":"одно из: ${AREAS.join(' | ')}","fit":"профильное | частично профильное | непрофильное","urgency":"high | mid | low","urgency_reason":"почему","key_facts":["..."],"legal_issues":["правовой вопрос и, если уверен, применимый акт"],"risks":["..."],"deadlines_to_check":["..."],"documents_needed":["документ, который клиенту стоит принести"],"questions_for_client":["..."],"format_suggested":"Консультация | Изучение документов | Проверка участка","estimated_hours":{"min":1,"max":2},"hours_reason":"из чего складывается оценка часов: объём документов, сложность","next_step":"что юристу сделать первым","client_reply":"короткий вежливый ответ клиенту от имени Сауле: заявку получила, что подготовить, когда свяжется; без юридических выводов"}`;
+}
+
+function decide(l, a) {
+  if (/бесплатн/i.test(l.pay || '')) return 'decline';
+  if (a && a.fit === 'непрофильное') return 'decline';
+  return a && ['accept', 'clarify', 'decline'].includes(a.decision) ? a.decision : 'clarify';
 }
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
@@ -58,10 +67,14 @@ async function notify(lead, a) {
   if (!token || !chat) return false;
   const u = { high: '🔴 Срочно', mid: '🟡 Средне', low: '🟢 Не срочно' };
   const h = a && a.estimated_hours ? `${a.estimated_hours.min}–${a.estimated_hours.max} ч` : '';
-  let msg = `<b>Новая заявка</b>\n${esc(lead.name)} · ${esc(lead.contact)}\nФормат: ${esc(lead.format)} · Тема: ${esc(lead.topic)}\n\n<i>${esc(lead.story)}</i>`;
+  const D = { accept: '✅ Подходит', clarify: '❓ Уточнить', decline: '⛔ Отсеять' };
+  const d = decide(lead, a);
+  let msg = `${D[d]}${a && a.decision_reason ? ' — ' + esc(a.decision_reason) : ''}\n\n<b>Новая заявка</b>\n${esc(lead.name)} · ${esc(lead.contact)}\nФормат: ${esc(lead.format)} · Тема: ${esc(lead.topic)}\n\n<i>${esc(lead.story)}</i>`;
   if (lead.goal) msg += `\nЦель: ${esc(lead.goal)}`;
   if (lead.docs) msg += `\nДокументы: ${esc(lead.docs)}`;
   if (lead.deadline) msg += `\nСроки: ${esc(lead.deadline)}`;
+  msg += `\nОплата: ${esc(lead.pay || 'не указано')}`;
+  if (lead.source) msg += `\nИсточник: ${esc(lead.source)}`;
   if (a) {
     msg += `\n\n<b>ИИ-разбор</b> · ${u[a.urgency] || ''} · ${esc(a.area || '')} · ${esc(a.fit || '')}${h ? ' · ' + h : ''}\n${esc(a.summary || '')}`;
     if (a.urgency_reason) msg += `\nСрочность: ${esc(a.urgency_reason)}`;
@@ -86,7 +99,9 @@ export default async function handler(req, res) {
     name: clip(b.name, 120), contact: clip(b.contact, 60), format: clip(b.format, 60) || 'Пока не знаю',
     topic: clip(b.topic, 80) || 'Другое', story: clip(b.story, 6000), goal: clip(b.goal, 500),
     docs: clip(b.docs, 500), deadline: clip(b.deadline, 200),
+    pay: clip(b.pay, 80), source: clip(b.source, 200),
   };
+  if (!lead.pay) return res.status(400).json({ error: 'invalid' });
   if (!lead.name || !lead.contact || lead.story.length < 30) return res.status(400).json({ error: 'invalid' });
   let a = null;
   try { a = await analyze(lead); } catch (e) { console.error(e); }
@@ -96,6 +111,7 @@ export default async function handler(req, res) {
   const client = a && {
     summary: a.summary, documents_needed: a.documents_needed, questions_for_client: a.questions_for_client,
     urgency: a.urgency, urgency_reason: a.urgency_reason, format_suggested: a.format_suggested, estimated_hours: a.estimated_hours,
+    off_profile: a.fit === 'непрофильное',
   };
   return res.status(200).json({ delivered, analysis: client });
 }
