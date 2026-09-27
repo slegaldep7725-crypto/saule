@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Слоги-догонялки</title>
+<meta name="description" content="Короткий тренажёр слияния букв в слоги для детей 5–7 лет">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#EEF4FB; --card:#FFFFFF; --ink:#1E2A44; --muted:#5D6B86; --line:#D5DFEE;
+  --cons:#2F6FDB; --cons-bg:#E3ECFB; --vow:#E4572E; --vow-bg:#FDE8E2;
+  --ok:#2E9E5B; --ok-bg:#E3F5EA; --bad:#C8412A; --bad-bg:#FCE9E4; --sun:#F5B700; --btn:#E6EEF9;
+  color-scheme:light;
+  font-family:"Andika","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:18px;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--cons);outline-offset:3px}
+[hidden]{display:none!important}
+.app{max-width:720px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-inline:16px;padding-block:12px 20px;gap:14px}
+
+.top{display:flex;align-items:center;gap:10px}
+.logo{font-weight:700;font-size:24px;flex:1;line-height:1.1}
+.logo .c{color:var(--cons)} .logo .v{color:var(--vow)}
+.pill{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill i{font-style:normal;color:var(--sun);font-size:20px}
+.icon-btn{width:44px;height:44px;border-radius:50%;background:var(--card);border:2px solid var(--line);font-size:20px;display:grid;place-items:center}
+
+/* меню */
+.label{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:4px 0 -4px}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{background:var(--card);border:3px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:12px;text-align:left}
+.step[aria-pressed="true"]{border-color:var(--cons);box-shadow:0 0 0 3px rgba(47,111,219,.15)}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--btn);display:grid;place-items:center;font-weight:700;flex:none}
+.step[aria-pressed="true"] .n{background:var(--cons);color:#fff}
+.step .body{flex:1;min-width:0}
+.step .let{font-weight:700;font-size:22px;letter-spacing:.06em}
+.step .let .c{color:var(--cons)} .step .let .v{color:var(--vow)}
+.step small{color:var(--muted);font-size:14px}
+.step .pct{font-weight:700;color:var(--ok);font-variant-numeric:tabular-nums;font-size:16px}
+.go{background:var(--ok);color:#fff;font-size:28px;font-weight:700;border-radius:20px;padding:18px;box-shadow:0 5px 0 #237A46}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #237A46}
+.album{display:flex;flex-wrap:wrap;gap:4px;font-size:30px;min-height:40px}
+.album .empty{font-size:15px;color:var(--muted)}
+.tip{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.5;color:var(--ink)}
+.tip b{color:var(--cons)}
+.warn{background:var(--bad-bg);color:var(--bad);border-radius:14px;padding:10px 14px;font-size:15px;line-height:1.45}
+
+/* игра */
+.rail{display:flex;gap:5px}
+.rail span{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.rail span.ok{background:var(--ok)} .rail span.miss{background:var(--sun)} .rail span.now{background:var(--cons)}
+.stage{flex:1;background:var(--card);border:3px solid var(--line);border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:22px 12px;min-height:330px;position:relative;overflow:hidden}
+.stage.good{border-color:var(--ok);background:var(--ok-bg)}
+.task{font-size:20px;font-weight:700;text-align:center;text-wrap:balance}
+.sub{font-size:15px;color:var(--muted);text-align:center;min-height:20px}
+.tile{font-weight:700;border-radius:22px;display:grid;place-items:center;line-height:1;user-select:none;-webkit-user-select:none}
+.tile.c{background:var(--cons-bg);color:var(--cons);border:3px solid var(--cons)}
+.tile.v{background:var(--vow-bg);color:var(--vow);border:3px solid var(--vow)}
+
+/* догонялки */
+.track{position:relative;width:100%;max-width:520px;height:130px;display:flex;align-items:center;justify-content:space-between}
+.track::before{content:"";position:absolute;left:60px;right:60px;top:50%;border-top:4px dashed var(--line)}
+.track .tile{width:110px;height:110px;font-size:72px;position:relative;z-index:1;touch-action:none}
+.track .tile.c{cursor:grab}
+.stretch{font-size:34px;font-weight:700;color:var(--cons);letter-spacing:.02em;min-height:44px;text-align:center}
+.merged{display:flex;border-radius:22px;overflow:hidden;font-size:96px;font-weight:700;line-height:1;box-shadow:0 6px 0 rgba(30,42,68,.08)}
+.merged span{padding:14px 10px}
+.merged .c{background:var(--cons-bg);color:var(--cons)} .merged .v{background:var(--vow-bg);color:var(--vow)}
+
+/* найди */
+.speaker{width:110px;height:110px;border-radius:50%;background:var(--cons);color:#fff;font-size:52px;box-shadow:0 6px 0 #2256AD}
+.speaker:active{transform:translateY(3px);box-shadow:0 3px 0 #2256AD}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;max-width:460px}
+.choice{background:var(--card);border:3px solid var(--line);border-radius:20px;font-size:clamp(44px,13vw,64px);font-weight:700;padding:14px 0;letter-spacing:.03em}
+.choice .c{color:var(--cons)} .choice .v{color:var(--vow)}
+.choice.right{border-color:var(--ok);background:var(--ok-bg)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:.55}
+
+/* паровоз */
+.train{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;justify-content:center;transition:transform 1s ease-in}
+.train.leave{transform:translateX(120vw)}
+.loco{font-size:64px;line-height:1;transform:scaleX(-1)}
+.wagon{position:relative;background:var(--card);border:3px solid var(--line);border-radius:14px;font-weight:700;font-size:clamp(34px,10vw,54px);padding:10px 12px 18px;min-width:78px}
+.wagon::before,.wagon::after{content:"";position:absolute;bottom:-9px;width:16px;height:16px;border-radius:50%;background:var(--ink)}
+.wagon::before{left:12px} .wagon::after{right:12px}
+.wagon .c{color:var(--cons)} .wagon .v{color:var(--vow)}
+.wagon.lit{border-color:var(--sun);background:#FFF6D6;transform:translateY(-6px)}
+.wagon.read{border-color:var(--ok);background:var(--ok-bg)}
+.wagon:disabled{cursor:default}
+.word-join{display:flex;gap:0}
+.word-join .wagon{border-radius:0}
+.word-join .wagon:first-child{border-radius:14px 0 0 14px} .word-join .wagon:last-child{border-radius:0 14px 14px 0}
+.reveal{font-size:110px;line-height:1;animation:pop .5s}
+
+.actions{display:flex;gap:10px}
+.act{flex:1;border-radius:18px;padding:14px 8px;font-size:18px;font-weight:700;background:var(--btn);display:flex;align-items:center;justify-content:center;gap:8px}
+.act.yes{background:var(--ok);color:#fff}
+.act .e{font-size:26px}
+.small-link{background:none;color:var(--muted);font-size:15px;text-decoration:underline;padding:4px}
+
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .45s}
+@media (prefers-reduced-motion:reduce){.shake,.pop,.reveal{animation:none}.train{transition:none}}
+
+/* финиш */
+.finish{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.finish .big{font-size:36px;font-weight:700;text-wrap:balance}
+.finish .sticker{font-size:120px;line-height:1}
+.finish .note{color:var(--muted);font-size:16px;max-width:420px;line-height:1.45}
+@media (max-width:420px){.track .tile{width:92px;height:92px;font-size:60px}.merged{font-size:80px}.act{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo">Сло<span class="c">г</span><span class="v">и</span>-догонялки</div>
+    <div class="pill" title="Звёзды"><i>★</i><span id="stars">0</span></div>
+    <button class="icon-btn" id="homeBtn" aria-label="В меню" hidden>⌂</button>
+  </div>
+
+  <section id="menu" style="display:flex;flex-direction:column;gap:12px">
+    <div class="warn" id="noVoice" hidden>На этом устройстве не нашлось русского голоса. В игре «Найди слог» слог будет показан маленькими буквами для взрослого: произнесите его сами.</div>
+    <div class="label">Ступенька</div>
+    <div class="steps" id="steps"></div>
+    <button class="go" id="start">Играть · 2 минуты</button>
+    <div class="label">Наклейки</div>
+    <div class="album" id="album"></div>
+    <div class="tip">
+      <b>Как заниматься.</b> Каждый день по 2–3 минуты, лучше два раза в день, чем один раз долго. Заканчивайте, пока ей ещё хочется. Картинок в игре нет специально: здесь не угадаешь, можно только прочитать. Картинка-наклейка появляется только в награду.<br>
+      <b>Главное правило:</b> согласную тянем и «едем» к гласной, не останавливаясь: «мммА», а не «эм… а». Переходите на следующую ступеньку, когда полоска дойдёт до 80%.
+    </div>
+  </section>
+
+  <section id="play" hidden style="flex:1;display:flex;flex-direction:column;gap:14px">
+    <div class="rail" id="rail"></div>
+    <div class="stage" id="stage"></div>
+    <div id="controls"></div>
+  </section>
+
+  <section id="done" hidden class="finish">
+    <div class="big" id="doneTitle">Готово!</div>
+    <div class="sticker pop" id="doneSticker"></div>
+    <div class="note" id="doneNote"></div>
+    <div class="actions" style="width:100%;max-width:460px">
+      <button class="act yes" id="again"><span class="e">↻</span>Ещё</button>
+      <button class="act" id="toMenu"><span class="e">⌂</span>Меню</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* Ступеньки: сначала «тянущиеся» согласные (их легко петь и сливать), потом взрывные. */
+const STEPS=[
+  {c:'МЛН',v:'АОУ',note:'тянутся: мммА, лллУ'},
+  {c:'МЛНРС',v:'АОУЫ',note:'добавляем Р, С и Ы'},
+  {c:'МЛНРСВШЗ',v:'АОУЫИ',note:'В, Ш, З и И'},
+  {c:'МЛНРСВШЗПТК',v:'АОУЫИ',note:'короткие: П, Т, К'},
+  {c:'МЛНРСВШЗПТКБДГЖ',v:'АОУЫИЭ',note:'Б, Д, Г, Ж'},
+  {c:'МЛНРСВШЗПТКБДГЖХЧ',v:'АОУЫИЕЯЮЁ',note:'мягкие: МЯ, ЛЮ, НЁ'},
+];
+const BAD=/^(Ж|Ш|Ч)(Ы|Я|Ю)$|^(К|Г|Х)(Ы|Я|Ю|Ё|Э)$|^Ч(Э|Ё|Ы)$|^(Ж|Ш)Э$/;
+const WORDS=`МА-МА 👩|ЛА-МА 🦙|ЛУ-НА 🌙|МЫ-ЛО 🧼|РО-ЗА 🌹|СО-ВА 🦉|ЛИ-СА 🦊|ЗИ-МА ❄️|ВО-ДА 💧|НО-ГА 🦵|РУ-КА ✋|ПИ-ЛА 🪚|ШИ-НА 🛞|СА-НИ 🛷|ЛЫ-ЖИ 🎿|ВА-ЗА 🏺|КО-ЗА 🐐|РЫ-БА 🐟|ПА-ПА 👨|БА-БА 👵|ШУ-БА 🧥|ЖА-БА 🐸|ДЫ-НЯ 🍈|КИ-НО 🎬|МО-РЕ 🌊|КА-ША 🥣|МУ-ХА 🪰|ТУ-ЧА 🌧️|БУ-СЫ 📿|ПИ-РО-ГИ 🥟|МА-ЛИ-НА 🫐|ПА-НА-МА 👒|РА-КЕ-ТА 🚀|ГА-ЗЕ-ТА 📰`.split('|').map(x=>{const[t,e]=x.split(' ');return{t,e,s:t.split('-')};});
+const STICKERS='🦄🐱🐶🦊🐼🐨🐯🦁🐸🐵🐧🦋🐞🐢🐬🐳🦖🌈⭐🍓🍦🧁🎈🎀🌻🌸🍭🚀👑💎🎠🐰🦔🐝🐙🦩🦜'.split('');
+
+/* Хранилище */
+const KEY='slogi:v1';
+let S={stars:0,step:0,stats:{},stickers:[]};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const isV=ch=>'АОУЫИЭЕЯЮЁ'.includes(ch);
+const html=syl=>[...syl].map(ch=>`<span class="${isV(ch)?'v':'c'}">${ch}</span>`).join('');
+
+function sylls(step){
+  const st=STEPS[step],out=[];
+  [...st.c].forEach(c=>[...st.v].forEach(v=>{if(!BAD.test(c+v))out.push(c+v);}));
+  return out;
+}
+function mastery(step){
+  const L=sylls(step);let good=0;
+  L.forEach(s=>{const x=S.stats[s];if(x&&x.ok>=2&&x.ok>=2*x.bad)good++;});
+  return Math.round(100*good/L.length);
+}
+function wordsFor(step){
+  const st=STEPS[step],ok=new Set([...st.c,...st.v]);
+  return WORDS.filter(w=>[...w.t.replace(/-/g,'')].every(ch=>ok.has(ch)));
+}
+
+/* Голос */
+let voice=null,hasVoice='speechSynthesis' in window;
+function pickVoice(){if(!hasVoice)return;const v=speechSynthesis.getVoices().filter(v=>/^ru/i.test(v.lang));voice=v.find(v=>/google|milena|yuri|katya|irina|svetlana/i.test(v.name))||v[0]||null;}
+if(hasVoice){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+setTimeout(()=>{if(!hasVoice||!voice)$('noVoice').hidden=false;},1500);
+function say(t,rate){
+  if(!hasVoice)return Promise.resolve();
+  return new Promise(res=>{try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t.toLowerCase());u.lang='ru-RU';if(voice)u.voice=voice;u.rate=rate||0.8;u.pitch=1.1;
+    u.onend=u.onerror=()=>res();speechSynthesis.speak(u);setTimeout(res,3000);
+  }catch(e){res();}});
+}
+const PRAISE=['Да!','Верно!','Молодец!','Отлично!','Умница!','Ура!'];
+
+/* Меню */
+function renderMenu(){
+  $('stars').textContent=S.stars;
+  const box=$('steps');box.innerHTML='';
+  STEPS.forEach((st,i)=>{
+    const b=document.createElement('button');b.className='step';b.setAttribute('aria-pressed',S.step===i);
+    const newC=i?[...st.c].filter(c=>!STEPS[i-1].c.includes(c)).join(''):st.c;
+    const newV=i?[...st.v].filter(v=>!STEPS[i-1].v.includes(v)).join(''):st.v;
+    b.innerHTML=`<span class="n">${i+1}</span><span class="body"><span class="let"><span class="c">${newC}</span> <span class="v">${newV}</span></span><br><small>${st.note}</small></span><span class="pct">${mastery(i)}%</span>`;
+    b.onclick=()=>{S.step=i;save();renderMenu();};
+    box.appendChild(b);
+  });
+  const A=$('album');
+  A.innerHTML=S.stickers.length?S.stickers.map(s=>`<span>${s}</span>`).join(''):'<span class="empty">За каждую игру — новая наклейка.</span>';
+}
+
+/* План игры: ~12 коротких заданий */
+let G=null;
+function weightedSyl(list){
+  const w=list.map(s=>{const x=S.stats[s]||{ok:0,bad:0};return Math.max(0.3,1+2.5*x.bad-0.5*Math.min(x.ok,4)+(x.ok+x.bad?0:1.2));});
+  let r=Math.random()*w.reduce((a,b)=>a+b,0);
+  for(let i=0;i<list.length;i++){r-=w[i];if(r<=0)return list[i];}
+  return list[list.length-1];
+}
+function plan(){
+  const L=sylls(S.step),T=[];
+  const push=(type)=>T.push({type,target:weightedSyl(L)});
+  push('merge');push('find');push('find');push('train');
+  push('merge');push('find');push('find');push('find');push('train');
+  push('find');push('find');
+  const W=wordsFor(S.step);
+  if(W.length)T.push({type:'word',word:rnd(W)});else push('find');
+  return T;
+}
+function start(){
+  G={tasks:plan(),i:0,res:[],findOk:0,findAll:0};
+  show('play');next();
+}
+function show(id){['menu','play','done'].forEach(s=>$(s).hidden=s!==id);$('homeBtn').hidden=id==='menu';if(id==='menu')renderMenu();}
+function rail(){
+  const r=$('rail');r.innerHTML='';
+  G.tasks.forEach((_,i)=>{const s=document.createElement('span');if(i<G.i)s.className=G.res[i]?'ok':'miss';else if(i===G.i)s.className='now';r.appendChild(s);});
+}
+function done(ok){
+  G.res[G.i]=ok;
+  if(ok){S.stars++;$('stars').textContent=S.stars;save();}
+  setTimeout(()=>{G.i++;next();},ok?650:900);
+}
+function mark(s,ok){const x=S.stats[s]||(S.stats[s]={ok:0,bad:0});ok?x.ok++:x.bad++;save();}
+function next(){
+  if(G.i>=G.tasks.length)return finish();
+  rail();
+  const t=G.tasks[G.i],st=$('stage');
+  st.className='stage';st.innerHTML='';$('controls').innerHTML='';
+  ({merge,find,train,word})[t.type](t,st,$('controls'));
+}
+
+/* 1. Догонялки: согласная бежит к гласной */
+function merge(t,st,ctl){
+  const c=t.target[0],v=t.target[1];
+  st.innerHTML=`<div class="task">Догони гласную!</div>
+    <div class="stretch" id="str">Тяни ${c}</div>
+    <div class="track" id="trk"><div class="tile c" id="tc">${c}</div><div class="tile v" id="tv">${v}</div></div>
+    <div class="sub">Веди пальцем букву ${c} к букве ${v} и тяни звук</div>`;
+  const tc=$('tc'),tv=$('tv'),str=$('str');
+  let D=0,x0=0,dx=0,drag=false,fin=false;
+  const dist=()=>tv.getBoundingClientRect().left-tc.getBoundingClientRect().left+dx;
+  const setX=x=>{dx=Math.max(0,Math.min(D,x));tc.style.transform=`translateX(${dx}px)`;
+    const k=D?dx/D:0;str.textContent=(c.repeat(1+Math.round(k*5))).split('').join(' ')+(k>.85?' '+v:'');};
+  const finish=()=>{
+    if(fin)return;fin=true;
+    st.innerHTML=`<div class="task">Вместе получилось</div><div class="merged pop"><span class="c">${c}</span><span class="v">${v}</span></div><div class="sub">Скажи: «${c}${v}»</div>`;
+    say(t.target);mark(t.target,true);
+    ctl.innerHTML=`<div class="actions"><button class="act" id="rep"><span class="e">🔊</span>Ещё раз</button><button class="act yes" id="nx"><span class="e">→</span>Дальше</button></div>`;
+    $('rep').onclick=()=>say(t.target);
+    $('nx').onclick=()=>done(true);
+  };
+  const autoSlide=()=>{
+    let k=0;D=dist();
+    const step=()=>{k+=0.035;setX(k*D);if(k<1)requestAnimationFrame(step);else finish();};
+    requestAnimationFrame(step);
+  };
+  tc.addEventListener('pointerdown',e=>{if(fin)return;drag=true;D=dist();x0=e.clientX-dx;tc.setPointerCapture(e.pointerId);});
+  tc.addEventListener('pointermove',e=>{if(!drag)return;setX(e.clientX-x0);if(dx>=D*0.9){drag=false;setX(D);finish();}});
+  tc.addEventListener('pointerup',()=>{if(!drag)return;drag=false;if(dx<8)autoSlide();else if(dx<D*0.9){tc.style.transition='transform .25s';setX(0);setTimeout(()=>tc.style.transition='',260);str.textContent='Тяни '+c;}});
+}
+
+/* 2. Найди слог: слышит — находит. Картинок нет, угадать нельзя. */
+function find(t,st,ctl){
+  const L=sylls(S.step),c=t.target[0],v=t.target[1];
+  const sameC=L.filter(s=>s[0]===c&&s!==t.target),sameV=L.filter(s=>s[1]===v&&s!==t.target);
+  const n=L.length>=12?4:3;
+  let pool=shuffle(Math.random()<.5&&sameC.length>=n-1?sameC:sameV.length>=n-1?sameV:sameC.concat(sameV));
+  const opts=shuffle([t.target,...[...new Set(pool)].slice(0,n-1)]);
+  st.innerHTML=`<div class="task">Послушай и найди слог</div>
+    <button class="speaker" id="spk" aria-label="Послушать">🔊</button>
+    <div class="sub" id="adult">${voice?'':'Взрослый, скажи: «'+t.target.toLowerCase()+'»'}</div>
+    <div class="choices" id="ch" style="grid-template-columns:repeat(${n===3?3:2},minmax(0,1fr))">${opts.map((o,i)=>`<button class="choice" data-i="${i}">${html(o)}</button>`).join('')}</div>`;
+  $('spk').onclick=()=>say(t.target);
+  setTimeout(()=>say(t.target),250);
+  let first=true;
+  st.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{
+    const o=opts[+b.dataset.i];
+    if(o===t.target){
+      b.classList.add('right');st.querySelectorAll('.choice').forEach(x=>x.disabled=true);
+      mark(t.target,first);G.findAll++;if(first)G.findOk++;
+      say(rnd(PRAISE)+' '+t.target,0.9);
+      st.classList.add('good');done(first);
+    }else{
+      b.classList.add('wrong');b.disabled=true;first=false;
+      st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');
+      say(t.target);
+    }
+  });
+}
+
+/* 3. Паровоз: читает вагончики по порядку, нажимает — проверяет по звуку */
+function train(t,st,ctl){
+  const L=sylls(S.step),c=t.target[0],v=t.target[1];
+  let row=Math.random()<.5?L.filter(s=>s[0]===c):L.filter(s=>s[1]===v);
+  if(row.length<3)row=L;
+  row=shuffle(row).slice(0,Math.min(4,row.length));
+  st.innerHTML=`<div class="task">Прочитай вагончик, потом нажми на него</div>
+    <div class="train" id="tr"><span class="loco">🚂</span>${row.map((s,i)=>`<button class="wagon${i?'':' lit'}" data-i="${i}" ${i?'disabled':''}>${html(s)}</button>`).join('')}</div>
+    <div class="sub">Нажала — тренажёр скажет, как правильно</div>`;
+  let k=0;
+  st.querySelectorAll('.wagon').forEach(b=>b.onclick=async()=>{
+    if(+b.dataset.i!==k)return;
+    b.classList.remove('lit');b.classList.add('read');b.disabled=true;
+    await say(row[k],0.85);
+    k++;
+    const nb=st.querySelector(`.wagon[data-i="${k}"]`);
+    if(nb){nb.disabled=false;nb.classList.add('lit');}
+    else{
+      $('tr').classList.add('leave');
+      ctl.innerHTML=`<div class="actions"><button class="act yes" id="ok"><span class="e">✓</span>Прочитала сама</button><button class="act" id="no"><span class="e">↻</span>Было трудно</button></div>`;
+      $('ok').onclick=()=>{row.forEach(s=>mark(s,true));done(true);};
+      $('no').onclick=()=>{row.forEach(s=>mark(s,false));done(false);};
+    }
+  });
+}
+
+/* 4. Склей слово: картинка только в награду, после прочтения */
+function word(t,st,ctl){
+  const w=t.word;
+  st.innerHTML=`<div class="task">Прочитай вагончики и склей слово</div>
+    <div class="train" id="tr">${w.s.map((s,i)=>`<button class="wagon" data-i="${i}">${html(s)}</button>`).join('')}</div>
+    <div class="sub">Картинка откроется, когда склеишь</div>`;
+  st.querySelectorAll('.wagon').forEach(b=>b.onclick=()=>say(w.s[+b.dataset.i],0.85));
+  ctl.innerHTML=`<div class="actions"><button class="act yes" id="glue"><span class="e">🔗</span>Склеить</button></div>`;
+  $('glue').onclick=async()=>{
+    $('tr').className='train word-join';
+    ctl.innerHTML='';
+    await say(w.s.join(' '),0.7);
+    await say(w.t.replace(/-/g,''),0.9);
+    st.insertAdjacentHTML('beforeend',`<div class="reveal">${w.e}</div>`);
+    st.classList.add('good');
+    ctl.innerHTML=`<div class="actions"><button class="act yes" id="nx"><span class="e">→</span>Дальше</button></div>`;
+    $('nx').onclick=()=>done(true);
+  };
+}
+
+function finish(){
+  const sticker=rnd(STICKERS.filter(s=>!S.stickers.includes(s)).concat(S.stickers.length>=STICKERS.length?STICKERS:[]));
+  S.stickers.push(sticker);save();
+  show('done');
+  $('doneSticker').textContent=sticker;
+  const acc=G.findAll?G.findOk/G.findAll:0,m=mastery(S.step);
+  $('doneTitle').textContent=acc>=.8?'Здорово! Новая наклейка!':'Молодец! Новая наклейка!';
+  $('doneNote').textContent=m>=80&&S.step<STEPS.length-1
+    ?`Ступенька ${S.step+1} освоена на ${m}%. Можно переходить на ступеньку ${S.step+2}.`
+    :`Ступенька ${S.step+1}: ${m}%. Завтра сыграем ещё. Трудные слоги будут попадаться чаще.`;
+  say(rnd(['Ура! Новая наклейка!','Молодец! Держи наклейку!']),1);
+}
+
+$('start').onclick=()=>{if(hasVoice)try{speechSynthesis.cancel();}catch(e){}start();};
+$('again').onclick=start;
+$('toMenu').onclick=()=>show('menu');
+$('homeBtn').onclick=()=>{if(hasVoice)try{speechSynthesis.cancel();}catch(e){}show('menu');};
+renderMenu();
+})();
+</script>
+</body>
+</html>
