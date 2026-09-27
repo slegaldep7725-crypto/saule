@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Читай-ка</title>
+<meta name="description" content="Быстрый тренажёр чтения по слогам для детей 5–7 лет">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#EEF4FB; --card:#FFFFFF; --ink:#1E2A44; --muted:#5D6B86; --line:#D5DFEE;
+  --s1:#2F6FDB; --s2:#E4572E; --ok:#2E9E5B; --ok-bg:#E3F5EA; --bad:#C8412A; --bad-bg:#FCE9E4;
+  --sun:#F5B700; --btn:#E6EEF9;
+  color-scheme:light;
+  font-family:"Andika","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:18px;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+button:focus-visible{outline:3px solid var(--s1);outline-offset:3px}
+.app{max-width:760px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-inline:16px;padding-block:12px 20px;gap:14px}
+[hidden]{display:none!important}
+
+/* шапка */
+.top{display:flex;align-items:center;gap:10px}
+.logo{font-weight:700;font-size:26px;letter-spacing:.01em;flex:1}
+.logo b{color:var(--s2)}
+.stars{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 14px 4px 10px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars i{font-style:normal;color:var(--sun);font-size:22px}
+.icon-btn{width:44px;height:44px;border-radius:50%;background:var(--card);border:2px solid var(--line);font-size:20px;display:grid;place-items:center}
+
+/* меню */
+.label{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:6px 0 -4px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:2px;min-height:86px}
+.opt .big{font-size:24px;font-weight:700;letter-spacing:.02em}
+.opt .big .a{color:var(--s1)} .opt .big .b{color:var(--s2)}
+.opt small{color:var(--muted);font-size:14px;line-height:1.3}
+.opt[aria-pressed="true"]{border-color:var(--s1);box-shadow:0 0 0 3px rgba(47,111,219,.15)}
+.opt:disabled{opacity:.4;cursor:default}
+.opt .meter{height:6px;border-radius:3px;background:var(--btn);margin-top:6px;overflow:hidden}
+.opt .meter span{display:block;height:100%;background:var(--ok);border-radius:3px}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.tg{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:8px 14px;font-size:16px}
+.tg[aria-pressed="true"]{background:var(--s1);border-color:var(--s1);color:#fff}
+.go{background:var(--ok);color:#fff;font-size:28px;font-weight:700;border-radius:20px;padding:18px;box-shadow:0 5px 0 #237A46;margin-top:4px}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #237A46}
+.ai{background:transparent;border:2px dashed var(--line);border-radius:14px;padding:10px;color:var(--muted);font-size:16px}
+.note{font-size:14px;color:var(--muted);line-height:1.45;margin:0}
+
+/* карточка */
+.bar{display:flex;gap:6px}
+.bar span{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.bar span.done{background:var(--ok)} .bar span.miss{background:var(--sun)} .bar span.now{background:var(--s1)}
+.stage{flex:1;background:var(--card);border:3px solid var(--line);border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 14px 34px;min-height:260px;position:relative;overflow:hidden}
+.prompt{position:absolute;top:12px;left:0;right:0;text-align:center;color:var(--muted);font-size:16px}
+.word{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:.42em;row-gap:.25em;line-height:1.15;font-weight:700;text-align:center;letter-spacing:.03em}
+.w{white-space:nowrap}
+.syl{position:relative;display:inline-block;cursor:pointer;padding:0 .02em}
+.syl:nth-child(odd){color:var(--s1)} .syl:nth-child(even){color:var(--s2)}
+.arcs .syl::after{content:"";position:absolute;left:10%;right:10%;bottom:-.16em;height:.22em;border:.06em solid currentColor;border-top:0;border-radius:0 0 999px 999px;opacity:.55}
+.mono .syl{color:var(--ink)!important}
+.syl.lit{background:#FFF3C4;border-radius:.12em}
+.cover{position:absolute;inset:0;display:grid;place-items:center;background:var(--card);font-size:90px;color:var(--line);font-weight:700}
+.heard{min-height:24px;margin-top:22px;color:var(--muted);font-size:17px;text-align:center}
+.stage.good{border-color:var(--ok);background:var(--ok-bg)}
+.stage.good .cover{background:var(--ok-bg)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pop{animation:pop .4s}
+@keyframes pop{50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.shake,.pop{animation:none}}
+
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.act{border-radius:18px;padding:14px 6px;font-size:18px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--btn)}
+.act .e{font-size:30px;line-height:1}
+.act.yes{background:var(--ok);color:#fff}
+.act.no{background:var(--bad-bg);color:var(--bad)}
+.act.mic.on{background:var(--s2);color:#fff}
+.pics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pic{background:var(--card);border:3px solid var(--line);border-radius:20px;font-size:clamp(46px,14vw,72px);padding:12px 0;line-height:1.1}
+.pic.right{border-color:var(--ok);background:var(--ok-bg)}
+.pic.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:.6}
+.row{display:flex;gap:10px}
+.row .act{flex:1}
+.link{background:none;color:var(--muted);font-size:16px;padding:6px;text-decoration:underline}
+
+/* финиш */
+.finish{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.finish .big{font-size:40px;font-weight:700;text-wrap:balance}
+.finish .earned{font-size:48px;color:var(--sun);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.tricky{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tricky span{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:6px 12px;font-weight:700;font-size:22px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;font-size:16px;max-width:calc(100% - 32px);text-align:center;z-index:5}
+@media (max-width:420px){.opt .big{font-size:21px}.act{font-size:15px}.act .e{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo">Читай<b>-ка</b></div>
+    <div class="stars" title="Звёзды"><i>★</i><span id="starCount">0</span></div>
+    <button class="icon-btn" id="homeBtn" aria-label="В меню" hidden>⌂</button>
+  </div>
+
+  <!-- Меню -->
+  <section id="menu" style="display:flex;flex-direction:column;gap:12px">
+    <div class="label">Что читаем</div>
+    <div class="grid" id="levels"></div>
+    <div class="label">Как играем</div>
+    <div class="grid" id="modes" style="grid-template-columns:repeat(3,minmax(0,1fr))"></div>
+    <div class="toggles">
+      <button class="tg" id="tgCase" aria-pressed="true">АБВ большие</button>
+      <button class="tg" id="tgArcs" aria-pressed="true">Дуги под слогами</button>
+      <button class="tg" id="tgColor" aria-pressed="true">Цветные слоги</button>
+      <button class="tg" id="tgVoice" aria-pressed="true">Голос</button>
+    </div>
+    <button class="go" id="start">Начать · 10 карточек</button>
+    <button class="ai" id="aiBtn">✨ Попросить у ИИ новые слова для этого уровня</button>
+    <p class="note">Занятие длится 3–5 минут. Нажмите на слог, и тренажёр его произнесёт. Трудные слова запоминаются и потом попадаются чаще. В режиме «Вслух» проверяет взрослый (кнопки ✓ и ✗) или микрофон, если браузер умеет распознавать речь.</p>
+  </section>
+
+  <!-- Карточка -->
+  <section id="play" hidden style="flex:1;display:flex;flex-direction:column;gap:14px">
+    <div class="bar" id="bar"></div>
+    <div class="stage" id="stage">
+      <div class="prompt" id="prompt"></div>
+      <div class="word" id="word"></div>
+      <div class="heard" id="heard"></div>
+      <div class="cover" id="cover" hidden>?</div>
+    </div>
+    <div id="controls"></div>
+  </section>
+
+  <!-- Финиш -->
+  <section id="done" hidden class="finish">
+    <div class="big" id="doneTitle">Молодец!</div>
+    <div class="earned" id="doneStars"></div>
+    <div id="doneNote" class="note"></div>
+    <div class="tricky" id="doneTricky"></div>
+    <div class="row" style="width:100%;max-width:460px;margin-top:10px">
+      <button class="act yes" id="again"><span class="e">↻</span>Ещё раз</button>
+      <button class="act" id="toMenu"><span class="e">⌂</span>Меню</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Слова ---------- */
+const CONS='МНЛРСТПКБДВГЗШЖХЧ'.split(''), VOW='АОУЫИЕЯЮЭЁ'.split('');
+const BAD_SYL=/^(Ж|Ш|Ч)(Ы|Я|Ю)$|^(К|Г|Х)(Ы|Я|Ю|Ё|Э)$|^Ч(Э|Ё)$|^(Ж|Ш)Э$/;
+const SYL=[];
+CONS.forEach(c=>VOW.forEach(v=>{const s=c+v;if(!BAD_SYL.test(s))SYL.push({t:s});}));
+'АМ ОН УС ИЛ ОТ АП УК ЫМ ЭТ ОР'.split(' ').forEach(s=>SYL.push({t:s}));
+
+const W2=`МА-МА 👩|ПА-ПА 👨|БА-БА 👵|КО-ЗА 🐐|ЛИ-СА 🦊|СО-ВА 🦉|РЫ-БА 🐟|ВО-ДА 💧|НО-ГА 🦵|РУ-КА ✋|ЗИ-МА ❄️|ЛУ-НА 🌙|ПИ-ЛА 🪚|КА-ША 🥣|МУ-ХА 🪰|РО-ЗА 🌹|ДЫ-НЯ 🍈|ШУ-БА 🧥|ЖА-БА 🐸|ПЧЕ-ЛА 🐝|ГРУ-ША 🍐|КОТ 🐱|ДОМ 🏠|СОК 🧃|СЫР 🧀|НОС 👃|КИТ 🐋|ЛУК 🧅|МЯЧ ⚽|ЖУК 🪲|СЛОН 🐘|ЗОНТ ☂️|ТОРТ 🎂|ЁЖ 🦔|ЛЕВ 🦁|ВОЛК 🐺|ГРИБ 🍄|БАНТ 🎀|ПА-УК 🕷️|ДУБ 🌳|МО-РЕ 🌊|ЛОД-КА 🚤|МИШ-КА 🧸|ЛАМ-ПА 💡|ПТИ-ЦА 🐦|ЗА-ЯЦ 🐰|МЫШ-КА 🐭|УТ-КА 🦆|ТЫК-ВА 🎃|СУП 🍲|ХЛЕБ 🍞|ШАРФ 🧣|КЛЮЧ 🔑|ЛИСТ 🍁`;
+const W3=`МА-ШИ-НА 🚗|СО-БА-КА 🐶|КО-РО-ВА 🐄|ГА-ЗЕ-ТА 📰|БА-НА-НЫ 🍌|ПА-НА-МА 👒|КА-ПУС-ТА 🥬|ЯБ-ЛО-КО 🍎|ПО-МИ-ДОР 🍅|О-ГУ-РЕЦ 🥒|ЧЕ-РЕ-ПА-ХА 🐢|КУ-КУ-РУ-ЗА 🌽|СА-МО-ЛЁТ ✈️|МЕД-ВЕДЬ 🐻|ЛЯ-ГУШ-КА 🐸|ПИН-ГВИН 🐧|ВЕР-БЛЮД 🐫|МО-ЛО-КО 🥛|КОН-ФЕ-ТА 🍬|МО-РО-ЖЕ-НО-Е 🍦|ВЕ-ЛО-СИ-ПЕД 🚲|РА-КЕ-ТА 🚀|ЗЕМ-ЛЯ-НИ-КА 🍓|А-ПЕЛЬ-СИН 🍊|КА-РАН-ДАШ ✏️|БА-БОЧ-КА 🦋|ДЕ-РЕ-ВО 🌳|ПЕ-ТУХ 🐓|КО-ЛО-КОЛ 🔔|ПО-ДА-РОК 🎁|ТЕ-ЛЕ-ФОН 📱|СНЕ-ГО-ВИК ⛄|ДРА-КОН 🐉|КО-РО-НА 👑|КО-РАБЛЬ 🚢|ОБЕ-ЗЬЯ-НА 🐒|ЖИ-РАФ 🦒|ВИ-НО-ГРАД 🍇|КА-СТРЮ-ЛЯ 🍲|ГИ-ТА-РА 🎸`;
+const W4=`КОТ СПИТ. 🐱|МА-МА МЫ-ЛА РА-МУ. 🧽|ЛИ-СА БЕ-ЖИТ В ЛЕС. 🦊|РЫ-БА ПЛЫ-ВЁТ. 🐟|У МА-ШИ ШАР. 🎈|ПА-ПА Е-ДЕТ НА МА-ШИ-НЕ. 🚗|СО-БА-КА ЛА-ЕТ: ГАВ! 🐶|НА НЕ-БЕ ЛУ-НА. 🌙|И-ДЁТ СНЕГ. ❄️|ЁЖ НЕ-СЁТ ГРИБ. 🦔|МЫ Е-ДИМ СУП. 🍲|ПТИ-ЦА ПО-ЁТ. 🐦|ПЧЕ-ЛА ЛЕ-ТИТ К ЦВЕТ-КУ. 🐝|ДЕ-ТИ И-ГРА-ЮТ В МЯЧ. ⚽|ЗА-ЯЦ ЕСТ МОР-КОВЬ. 🐰|СОЛН-ЦЕ СВЕ-ТИТ. ☀️|МИ-ША ПЬЁТ МО-ЛО-КО. 🥛|НА СТО-ЛЕ ТОРТ. 🎂|И-ДЁТ ДОЖДЬ. 🌧️|У ДО-МА РАС-ТЁТ ДУБ. 🌳|ЛЯ-ГУШ-КА ПРЫ-ГА-ЕТ. 🐸|МЫ ЛЕ-ТИМ НА СА-МО-ЛЁ-ТЕ. ✈️`;
+const parse=s=>s.split('|').map(x=>{const i=x.lastIndexOf(' ');return {t:x.slice(0,i),e:x.slice(i+1)};});
+
+const LEVELS=[
+  {id:'syl',name:'Слоги',sample:['МА','ЛУ'],hint:'МА, ЛУ, РЫ…',pool:SYL,flash:1300,pics:false},
+  {id:'w2',name:'Слова',sample:['КО','ЗА'],hint:'2 слога: КОТ, ЛИСА',pool:parse(W2),flash:1600,pics:true},
+  {id:'w3',name:'Длинные',sample:['МА','ШИ','НА'],hint:'3–5 слогов',pool:parse(W3),flash:2200,pics:true},
+  {id:'s',name:'Фразы',sample:['КОТ ','СПИТ'],hint:'короткие предложения',pool:parse(W4),flash:3200,pics:true},
+];
+const MODES=[
+  {id:'loud',name:'Вслух',icon:'🗣️',hint:'читает, взрослый проверяет'},
+  {id:'pic',name:'Картинка',icon:'🖼️',hint:'читает сама, находит'},
+  {id:'flash',name:'Молния',icon:'⚡',hint:'слово мелькает — успей'},
+];
+
+/* ---------- Хранилище ---------- */
+const KEY='chitayka:v1';
+let S={stars:0,level:'syl',mode:'loud',upper:true,arcs:true,color:true,voice:true,stats:{},flash:{},extra:{}};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+const $=id=>document.getElementById(id);
+const lvl=()=>LEVELS.find(l=>l.id===S.level)||LEVELS[0];
+const poolOf=l=>l.pool.concat(S.extra[l.id]||[]);
+const plain=t=>t.replace(/-/g,'');
+const norm=t=>t.toLowerCase().replace(/ё/g,'е').replace(/-/g,'').replace(/[^а-я ]/g,' ').replace(/\s+/g,' ').trim();
+const disp=t=>S.upper?t:t.toLowerCase();
+
+/* ---------- Голос ---------- */
+let ruVoice=null;
+function pickVoice(){const v=(speechSynthesis.getVoices()||[]).filter(v=>/^ru/i.test(v.lang));ruVoice=v.find(v=>/google|milena|yuri|katya|irina|svetlana/i.test(v.name))||v[0]||null;}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function say(text,rate){
+  if(!S.voice||!('speechSynthesis' in window))return Promise.resolve();
+  return new Promise(res=>{
+    try{
+      const u=new SpeechSynthesisUtterance(text.toLowerCase());
+      u.lang='ru-RU';if(ruVoice)u.voice=ruVoice;u.rate=rate||0.9;u.pitch=1.1;
+      u.onend=u.onerror=()=>res();
+      speechSynthesis.speak(u);
+      setTimeout(res,4000);
+    }catch(e){res();}
+  });
+}
+const PRAISE=['Молодец!','Отлично!','Умница!','Супер!','Здорово!','Так держать!','Правильно!'];
+const praise=()=>say(PRAISE[Math.floor(Math.random()*PRAISE.length)],1);
+
+/* ---------- Микрофон ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let micOK=!!SR, rec=null;
+
+/* ---------- Меню ---------- */
+function renderMenu(){
+  $('starCount').textContent=S.stars;
+  const L=$('levels');L.innerHTML='';
+  LEVELS.forEach(l=>{
+    const p=poolOf(l), seen=p.filter(x=>{const s=S.stats[x.t];return s&&s.ok>=2&&s.ok>s.bad;}).length;
+    const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed',S.level===l.id);
+    b.innerHTML=`<span class="big">${l.sample.map((s,i)=>`<span class="${i%2?'b':'a'}">${disp(s)}</span>`).join('')}</span><span>${l.name}</span><small>${l.hint}</small><span class="meter"><span style="width:${Math.round(100*seen/p.length)}%"></span></span>`;
+    b.onclick=()=>{S.level=l.id;if(!l.pics&&S.mode==='pic')S.mode='loud';save();renderMenu();};
+    L.appendChild(b);
+  });
+  const M=$('modes');M.innerHTML='';
+  MODES.forEach(m=>{
+    const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed',S.mode===m.id);
+    b.disabled=m.id==='pic'&&!lvl().pics;
+    b.innerHTML=`<span class="big">${m.icon}</span><span>${m.name}</span><small>${m.hint}</small>`;
+    b.onclick=()=>{S.mode=m.id;save();renderMenu();};
+    M.appendChild(b);
+  });
+  [['tgCase','upper'],['tgArcs','arcs'],['tgColor','color'],['tgVoice','voice']].forEach(([id,k])=>{
+    const b=$(id);b.setAttribute('aria-pressed',!!S[k]);
+    b.onclick=()=>{S[k]=!S[k];save();renderMenu();};
+  });
+  $('tgCase').textContent=S.upper?'АБВ большие':'абв маленькие';
+}
+
+/* ---------- Подбор карточек ---------- */
+function pickCards(pool,n){
+  const items=pool.map(x=>{const s=S.stats[x.t]||{ok:0,bad:0};
+    let w=1+3*s.bad-0.6*Math.min(s.ok,4)+(s.ok+s.bad===0?1.5:0);return {x,w:Math.max(w,0.25)};});
+  const out=[];
+  while(out.length<n&&items.length){
+    const sum=items.reduce((a,b)=>a+b.w,0);let r=Math.random()*sum,i=0;
+    for(;i<items.length-1;i++){r-=items[i].w;if(r<=0)break;}
+    out.push(items.splice(i,1)[0].x);
+  }
+  return out;
+}
+
+/* ---------- Игра ---------- */
+let G=null;
+function start(){
+  const l=lvl();
+  if(S.mode==='pic'&&!l.pics)S.mode='loud';
+  G={l,mode:S.mode,queue:pickCards(poolOf(l),10),i:0,res:[],earned:0,requeued:new Set(),tricky:new Set()};
+  show('play');
+  if('speechSynthesis' in window)try{speechSynthesis.cancel();}catch(e){}
+  next();
+}
+function show(id){
+  ['menu','play','done'].forEach(s=>$(s).hidden=s!==id);
+  $('homeBtn').hidden=id==='menu';
+  if(id==='menu')renderMenu();
+}
+function renderBar(){
+  const b=$('bar');b.innerHTML='';
+  G.queue.forEach((_,i)=>{const s=document.createElement('span');
+    if(i<G.i)s.className=G.res[i]?'done':'miss';else if(i===G.i)s.className='now';b.appendChild(s);});
+}
+function renderWord(item){
+  const w=$('word');
+  w.className='word'+(S.arcs?' arcs':'')+(S.color?'':' mono');
+  const words=item.t.split(' ');
+  const len=Math.max(...words.map(x=>plain(x).length));
+  const total=plain(item.t).length;
+  const base=total>14?Math.min(64,560/len):Math.min(130,640/Math.max(len,2.5));
+  w.style.fontSize=`min(${base}px, ${Math.round(base/7.2)}vw)`;
+  w.innerHTML='';
+  words.forEach(word=>{
+    const ws=document.createElement('span');ws.className='w';
+    const m=word.match(/^(.*?)([.,!?:]*)$/);
+    m[1].split('-').forEach(sy=>{
+      const s=document.createElement('span');s.className='syl';s.textContent=disp(sy);
+      s.onclick=e=>{e.stopPropagation();s.classList.add('lit');say(sy,0.8).then(()=>s.classList.remove('lit'));};
+      ws.appendChild(s);
+    });
+    if(m[2]){const p=document.createElement('span');p.textContent=m[2];p.style.color='var(--muted)';ws.appendChild(p);}
+    w.appendChild(ws);
+  });
+}
+function next(){
+  if(G.i>=G.queue.length)return finish();
+  const item=G.queue[G.i];G.first=true;G.hint=false;
+  renderBar();
+  const st=$('stage');st.classList.remove('good');
+  $('heard').textContent='';$('cover').hidden=true;
+  renderWord(item);
+  const C=$('controls');C.innerHTML='';
+  if(G.mode==='loud'){
+    $('prompt').textContent='Прочитай вслух';
+    C.innerHTML=`<div class="actions">
+      <button class="act" id="bHint"><span class="e">🔊</span>Подсказка</button>
+      ${micOK?'<button class="act mic" id="bMic"><span class="e">🎤</span>Слушай</button>':'<button class="act no" id="bNo"><span class="e">✗</span>Ещё раз</button>'}
+      <button class="act yes" id="bYes"><span class="e">✓</span>Верно</button></div>
+      ${micOK?'<div class="row" style="justify-content:center"><button class="link" id="bNo">Не получилось — пропустить</button></div>':''}`;
+    $('bHint').onclick=()=>hint(item);
+    $('bYes').onclick=()=>answer(true);
+    $('bNo').onclick=()=>answer(false);
+    if(micOK)$('bMic').onclick=()=>listen(item);
+  }else if(G.mode==='pic'){
+    $('prompt').textContent='Прочитай и найди картинку';
+    const pool=poolOf(G.l).filter(x=>x.e&&x.e!==item.e&&x.t!==item.t);
+    const opts=[item];
+    while(opts.length<3&&pool.length){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0];if(!opts.some(o=>o.e===k.e))opts.push(k);}
+    opts.sort(()=>Math.random()-.5);
+    C.innerHTML=`<div class="pics">${opts.map((o,i)=>`<button class="pic" data-i="${i}" aria-label="вариант ${i+1}">${o.e}</button>`).join('')}</div>
+      <div class="row" style="justify-content:center"><button class="link" id="bHint">🔊 Прочитать по слогам</button></div>`;
+    C.querySelectorAll('.pic').forEach(b=>b.onclick=()=>{
+      const o=opts[+b.dataset.i];
+      if(o===item){b.classList.add('right');answer(true);}
+      else{b.classList.add('wrong');b.disabled=true;G.first=false;mark(item,false);st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');say('Попробуй ещё');}
+    });
+    $('bHint').onclick=()=>hint(item);
+  }else{
+    const ms=S.flash[G.l.id]||G.l.flash;
+    $('prompt').textContent=`Запомни! ${(ms/1000).toFixed(1)} сек`;
+    C.innerHTML=`<div class="actions">
+      <button class="act" id="bShow"><span class="e">👀</span>Ещё раз</button>
+      <button class="act no" id="bNo"><span class="e">✗</span>Не успела</button>
+      <button class="act yes" id="bYes"><span class="e">✓</span>Верно</button></div>`;
+    const flash=()=>{$('cover').hidden=true;clearTimeout(G.t);G.t=setTimeout(()=>{$('cover').hidden=false;$('prompt').textContent='Что было написано?';},ms);};
+    flash();
+    $('bShow').onclick=()=>{G.first=false;flash();};
+    $('bYes').onclick=()=>{S.flash[G.l.id]=Math.max(500,Math.round(ms*(G.first?0.9:0.97)));answer(true);};
+    $('bNo').onclick=()=>{S.flash[G.l.id]=Math.min(5000,Math.round(ms*1.2));$('cover').hidden=true;answer(false);};
+  }
+}
+async function hint(item){
+  G.hint=true;G.first=false;
+  const syls=[...$('word').querySelectorAll('.syl')];
+  for(const s of syls){s.classList.add('lit');await say(s.textContent,0.75);s.classList.remove('lit');}
+  await say(plain(item.t).replace(/[.,!?:]/g,''),0.9);
+}
+function mark(item,ok){
+  const s=S.stats[item.t]||(S.stats[item.t]={ok:0,bad:0});
+  if(ok)s.ok++;else{s.bad++;G.tricky.add(item.t);}
+  save();
+}
+function answer(ok){
+  clearTimeout(G.t);stopMic();
+  const item=G.queue[G.i];
+  if(ok){
+    const clean=G.first&&!G.hint;
+    mark(item,clean);
+    if(clean){S.stars++;G.earned++;save();$('starCount').textContent=S.stars;}
+    G.res[G.i]=clean;
+    const st=$('stage');st.classList.add('good','pop');setTimeout(()=>st.classList.remove('pop'),400);
+    $('cover').hidden=true;
+    $('controls').querySelectorAll('button').forEach(b=>b.disabled=true);
+    praise();
+    setTimeout(()=>{G.i++;next();},1100);
+  }else{
+    mark(item,false);G.res[G.i]=false;
+    if(!G.requeued.has(item.t)){G.requeued.add(item.t);G.queue.push(item);}
+    Promise.all([hint(item),new Promise(r=>setTimeout(r,1500))]).then(()=>{G.i++;next();});
+    $('controls').querySelectorAll('button').forEach(b=>b.disabled=true);
+  }
+}
+function finish(){
+  show('done');
+  const n=G.queue.length,clean=G.res.filter(Boolean).length;
+  $('doneTitle').textContent=clean>=n-1?'Отлично! Всё прочитала!':clean>=n/2?'Молодец!':'Хорошая работа!';
+  $('doneStars').textContent='★ +'+G.earned;
+  const idx=LEVELS.indexOf(G.l);
+  $('doneNote').textContent=clean>=n-1&&idx<LEVELS.length-1?`Можно переходить к уровню «${LEVELS[idx+1].name}».`:(G.tricky.size?'Эти слова повторим в следующий раз:':'');
+  const T=$('doneTricky');T.innerHTML='';
+  [...G.tricky].forEach(t=>{const s=document.createElement('span');s.textContent=disp(t);T.appendChild(s);});
+  say(clean>=n-1?'Отлично! Ты всё прочитала!':'Молодец! Занятие закончено.',1);
+}
+
+/* ---------- Распознавание ---------- */
+function listen(item){
+  if(rec){stopMic();return;}
+  try{rec=new SR();}catch(e){micOK=false;next();return;}
+  if('speechSynthesis' in window)try{speechSynthesis.cancel();}catch(e){}
+  rec.lang='ru-RU';rec.interimResults=false;rec.maxAlternatives=5;
+  const btn=$('bMic');btn.classList.add('on');btn.lastChild.textContent='Слушаю…';
+  const target=norm(item.t).split(' ');
+  rec.onresult=e=>{
+    const alts=[...e.results[0]].map(a=>norm(a.transcript));
+    const ok=alts.some(a=>{
+      const words=a.split(' ');
+      if(target.length===1)return words.includes(target[0])||(target[0].length<=2&&a.replace(/ /g,'').includes(target[0]))||a.replace(/ /g,'')===target[0];
+      const hit=target.filter(t=>words.includes(t)).length;return hit/target.length>=0.75;
+    });
+    $('heard').textContent='Услышал: «'+(e.results[0][0].transcript||'…')+'»';
+    if(ok)answer(true);
+    else{G.first=false;const st=$('stage');st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');say('Попробуй ещё раз');}
+  };
+  rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){micOK=false;toast('Микрофон недоступен. Проверяйте кнопками ✓ и ✗.');next();}};
+  rec.onend=()=>{rec=null;const b=$('bMic');if(b){b.classList.remove('on');b.lastChild.textContent='Слушай';}};
+  try{rec.start();}catch(e){rec=null;}
+}
+function stopMic(){if(rec){try{rec.abort();}catch(e){}rec=null;}}
+
+/* ---------- ИИ: новые слова ---------- */
+async function askAI(){
+  const l=lvl(),b=$('aiBtn');
+  b.disabled=true;b.textContent='✨ Придумываю…';
+  try{
+    const known=poolOf(l).map(x=>plain(x.t)).slice(-80);
+    const r=await fetch('/api/reading',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({level:l.id,known})});
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    const have=new Set(poolOf(l).map(x=>x.t));
+    const add=(d.items||[]).filter(x=>x&&x.t&&!have.has(x.t));
+    S.extra[l.id]=(S.extra[l.id]||[]).concat(add).slice(-60);save();renderMenu();
+    toast(add.length?`Добавлено новых: ${add.length} (${add.slice(0,3).map(x=>disp(x.t)).join(', ')}…)`:'Новых слов не нашлось, попробуйте ещё раз');
+  }catch(e){toast('ИИ сейчас недоступен. Занимаемся на встроенных словах.');}
+  b.disabled=false;b.textContent='✨ Попросить у ИИ новые слова для этого уровня';
+}
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500);}
+
+$('start').onclick=start;
+$('again').onclick=start;
+$('toMenu').onclick=()=>show('menu');
+$('homeBtn').onclick=()=>{clearTimeout(G&&G.t);stopMic();show('menu');};
+$('aiBtn').onclick=askAI;
+renderMenu();
+})();
+</script>
+</body>
+</html>
