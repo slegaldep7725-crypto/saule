@@ -1,7 +1,14 @@
 {
-  "functions": { "api/lead.js": { "maxDuration": 60 } },
+  "functions": {
+    "api/lead.js": { "maxDuration": 60 },
+    "api/accept.js": { "maxDuration": 30, "includeFiles": "oferta.txt" },
+    "api/offer-ask.js": { "maxDuration": 60, "includeFiles": "oferta.txt" }
+  },
   "headers": [{ "source": "/(.*)", "headers": [
     { "key": "X-Content-Type-Options", "value": "nosniff" },
     { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+  ]}, { "source": "/oferta.txt", "headers": [
+    { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+    { "key": "Cache-Control", "value": "no-cache" }
   ]}]
 }
