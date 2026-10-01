@@ -1,0 +1,20 @@
+# Для казахстанского хостинга (Apache). На Vercel этот файл не используется.
+RewriteEngine On
+
+# www и http → https://npk-law.kz
+RewriteCond %{HTTP_HOST} ^www\.npk-law\.kz$ [NC,OR]
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://npk-law.kz/$1 [R=301,L]
+
+# /uslugi/dogovory → /uslugi/dogovory.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+# Старые адреса npk-law.kz 2016–2017 года → главная
+RewriteRule ^(o-kompanii|uslugi/?$|novosti|karera|kontakty) / [R=301,L,NC]
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

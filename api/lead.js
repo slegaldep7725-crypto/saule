@@ -92,6 +92,15 @@ async function notify(lead, a) {
 }
 
 export default async function handler(req, res) {
+  const allowed = (process.env.ALLOWED_ORIGINS || 'https://npk-law.kz,https://www.npk-law.kz').split(',').map((s) => s.trim());
+  const origin = req.headers?.origin || '';
+  if (allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
   const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
   if (b.website) return res.status(200).json({ delivered: true, analysis: null }); // бот-ловушка

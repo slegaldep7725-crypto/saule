@@ -1,4 +1,6 @@
-# Сайт Сауле Тураровой: как выложить на Vercel
+# Сайт Saule Turarova: как выложить на Vercel
+
+> Домен npk-law.kz и SEO — см. **DOMAIN-SEO.md**: домены .kz нельзя направлять напрямую на Vercel.
 
 В архиве:
 - `index.html` — сам сайт;
