@@ -110,8 +110,7 @@ export default async function handler(req, res) {
     docs: clip(b.docs, 500), deadline: clip(b.deadline, 200),
     pay: clip(b.pay, 80), source: clip(b.source, 200),
   };
-  if (!lead.pay) return res.status(400).json({ error: 'invalid' });
-  if (!lead.name || !lead.contact || lead.story.length < 30) return res.status(400).json({ error: 'invalid' });
+  if (!lead.name || !lead.contact || lead.story.length < 20) return res.status(400).json({ error: 'invalid' });
   let a = null;
   try { a = await analyze(lead); } catch (e) { console.error(e); }
   let delivered = false;
