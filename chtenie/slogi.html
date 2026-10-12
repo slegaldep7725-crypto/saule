@@ -110,6 +110,30 @@ button:focus-visible{outline:3px solid var(--cons);outline-offset:3px}
 .pop{animation:pop .45s}
 @media (prefers-reduced-motion:reduce){.shake,.pop,.reveal{animation:none}.train{transition:none}}
 
+/* слова */
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:4px;gap:4px}
+.tab{border-radius:12px;padding:10px;font-weight:700;font-size:18px;background:transparent;color:var(--muted)}
+.tab[aria-pressed="true"]{background:var(--cons);color:#fff}
+.wd{display:flex;justify-content:center;flex-wrap:nowrap;column-gap:.18em;font-weight:700;line-height:1.1;letter-spacing:.03em}
+.sy{position:relative;cursor:pointer}
+.sy .c{color:var(--cons)} .sy .v{color:var(--vow)} .sy .z{color:var(--muted)}
+.sy::after{content:"";position:absolute;left:8%;right:8%;bottom:-.14em;height:.2em;border:.055em solid var(--muted);border-top:0;border-radius:0 0 999px 999px;opacity:.45}
+.sy.lit{background:#FFF3C4;border-radius:.12em}
+.hintpic{font-size:96px;line-height:1}
+.peek{width:120px;height:120px;border-radius:24px;border:3px dashed var(--line);background:var(--paper);font-size:44px;color:var(--muted);display:grid;place-items:center}
+.slots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.slot{min-width:72px;height:76px;border-radius:16px;border:3px dashed var(--line);display:grid;place-items:center;font-weight:700;font-size:44px;padding:0 8px}
+.slot.full{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.slot .c{color:var(--cons)} .slot .v{color:var(--vow)} .slot .z{color:var(--muted)}
+.pieces{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.piece{min-width:76px;border-radius:16px;background:var(--card);border:3px solid var(--line);font-weight:700;font-size:44px;padding:8px 12px;box-shadow:0 4px 0 var(--line)}
+.piece .c{color:var(--cons)} .piece .v{color:var(--vow)} .piece .z{color:var(--muted)}
+.piece:disabled{visibility:hidden}
+.wchoices{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
+.wchoice{background:var(--card);border:3px solid var(--line);border-radius:18px;padding:12px 8px 18px}
+.wchoice.right{border-color:var(--ok);background:var(--ok-bg)}
+.wchoice.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:.55}
+
 /* финиш */
 .finish{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
 .finish .big{font-size:36px;font-weight:700;text-wrap:balance}
@@ -128,12 +152,17 @@ button:focus-visible{outline:3px solid var(--cons);outline-offset:3px}
 
   <section id="menu" style="display:flex;flex-direction:column;gap:12px">
     <div class="warn" id="noVoice" hidden>На этом устройстве не нашлось русского голоса. В игре «Найди слог» слог будет показан маленькими буквами для взрослого: произнесите его сами.</div>
+    <div class="tabs" role="group" aria-label="Что тренируем"><button class="tab" id="tabSyl">Слоги</button><button class="tab" id="tabW">Слова</button></div>
     <div class="label">Ступенька</div>
     <div class="steps" id="steps"></div>
     <button class="go" id="start">Играть · 2 минуты</button>
     <div class="label">Наклейки</div>
     <div class="album" id="album"></div>
-    <div class="tip">
+    <div class="tip" id="tipW">
+      <b>Слова с подсказками.</b> Картинка помогает понять, какое слово получилось, но прочитать его всё равно нужно самой. В «Собери слово» и «Какое слово?» варианты похожи (КОЗА, КОСА, РОЗА), поэтому по картинке не угадаешь. В «Прочитай слово» картинка спрятана: сначала прочитать, а 💡 нажимать, только если совсем не выходит. За прочитанное без подсказки дают звезду.<br>
+      <b>Порядок:</b> сначала слова из двух открытых слогов, потом с закрытым слогом (КОТ, ЛОД-КА), потом три слога и длинные слова.
+    </div>
+    <div class="tip" id="tipS">
       <b>Как заниматься.</b> Каждый день по 2–3 минуты, лучше два раза в день, чем один раз долго. Заканчивайте, пока ей ещё хочется. Картинок в игре нет специально: здесь не угадаешь, можно только прочитать. Картинка-наклейка появляется только в награду.<br>
       <b>Главное правило:</b> согласную тянем и «едем» к гласной, не останавливаясь: «мммА», а не «эм… а». Переходите на следующую ступеньку, когда полоска дойдёт до 80%.
     </div>
@@ -171,18 +200,26 @@ const STEPS=[
 ];
 const BAD=/^(Ж|Ш|Ч)(Ы|Я|Ю)$|^(К|Г|Х)(Ы|Я|Ю|Ё|Э)$|^Ч(Э|Ё|Ы)$|^(Ж|Ш)Э$/;
 const WORDS=`МА-МА 👩|ЛА-МА 🦙|ЛУ-НА 🌙|МЫ-ЛО 🧼|РО-ЗА 🌹|СО-ВА 🦉|ЛИ-СА 🦊|ЗИ-МА ❄️|ВО-ДА 💧|НО-ГА 🦵|РУ-КА ✋|ПИ-ЛА 🪚|ШИ-НА 🛞|СА-НИ 🛷|ЛЫ-ЖИ 🎿|ВА-ЗА 🏺|КО-ЗА 🐐|РЫ-БА 🐟|ПА-ПА 👨|БА-БА 👵|ШУ-БА 🧥|ЖА-БА 🐸|ДЫ-НЯ 🍈|КИ-НО 🎬|МО-РЕ 🌊|КА-ША 🥣|МУ-ХА 🪰|ТУ-ЧА 🌧️|БУ-СЫ 📿|ПИ-РО-ГИ 🥟|МА-ЛИ-НА 🫐|ПА-НА-МА 👒|РА-КЕ-ТА 🚀|ГА-ЗЕ-ТА 📰`.split('|').map(x=>{const[t,e]=x.split(' ');return{t,e,s:t.split('-')};});
+/* Слова по ступенькам: слоги через дефис, затем картинка */
+const W=(s)=>s.split('|').map(x=>{const[t,e]=x.trim().split(' ');return{t,e,s:t.split('-')};});
+const WSTEPS=[
+  {name:'2 слога',ex:'МА-МА',note:'открытые слоги: ЛУ-НА, РЫ-БА',list:W(`МА-МА 👩|ПА-ПА 👨|БА-БА 👵|ЛА-МА 🦙|ЛУ-НА 🌙|МЫ-ЛО 🧼|РО-ЗА 🌹|СО-ВА 🦉|ЛИ-СА 🦊|ЗИ-МА ❄️|ВО-ДА 💧|НО-ГА 🦵|РУ-КА ✋|ПИ-ЛА 🪚|СА-НИ 🛷|ЛЫ-ЖИ 🎿|ВА-ЗА 🏺|КО-ЗА 🐐|РЫ-БА 🐟|ШУ-БА 🧥|ЖА-БА 🐸|ДЫ-НЯ 🍈|КИ-НО 🎬|МО-РЕ 🌊|КА-ША 🥣|МУ-ХА 🪰|ТУ-ЧА 🌧️|БУ-СЫ 📿|НО-ТЫ 🎵`)},
+  {name:'Закрытый слог',ex:'КОТ',note:'КОТ, ДОМ, ЛОД-КА, ЛИ-МОН',list:W(`КОТ 🐱|ДОМ 🏠|СОК 🧃|СЫР 🧀|НОС 👃|КИТ 🐋|ЛУК 🧅|МЯЧ ⚽|ЖУК 🪲|СЛОН 🐘|ЗОНТ ☂️|ТОРТ 🎂|ЁЖ 🦔|ЛЕВ 🦁|ВОЛК 🐺|ГРИБ 🍄|БАНТ 🎀|СУП 🍲|ХЛЕБ 🍞|ШАРФ 🧣|КЛЮЧ 🔑|ЛИСТ 🍁|ЛОД-КА 🚤|МИШ-КА 🧸|ЛАМ-ПА 💡|УТ-КА 🦆|ТЫК-ВА 🎃|МЫШ-КА 🐭|ПТИ-ЦА 🐦|ЗА-ЯЦ 🐰|ПА-УК 🕷️|ЛИ-МОН 🍋|БА-НАН 🍌|ДИ-ВАН 🛋️|ПЕ-ТУХ 🐓|ДРА-КОН 🐉|ЖИ-РАФ 🦒|МЕД-ВЕДЬ 🐻|ЛО-ШАДЬ 🐴|ЁЛ-КА 🎄`)},
+  {name:'3 слога',ex:'МА-ШИ-НА',note:'СО-БА-КА, МО-ЛО-КО',list:W(`МА-ШИ-НА 🚗|СО-БА-КА 🐶|КО-РО-ВА 🐄|ГА-ЗЕ-ТА 📰|ПА-НА-МА 👒|КА-ПУС-ТА 🥬|ЯБ-ЛО-КО 🍎|ПО-МИ-ДОР 🍅|О-ГУ-РЕЦ 🥒|СА-МО-ЛЁТ ✈️|ЛЯ-ГУШ-КА 🐸|МО-ЛО-КО 🥛|КОН-ФЕ-ТА 🍬|РА-КЕ-ТА 🚀|БА-БОЧ-КА 🦋|ДЕ-РЕ-ВО 🌳|КО-ЛО-КОЛ 🔔|ПО-ДА-РОК 🎁|ТЕ-ЛЕ-ФОН 📱|СНЕ-ГО-ВИК ⛄|КО-РО-НА 👑|ВИ-НО-ГРАД 🍇|ГИ-ТА-РА 🎸|ЧЕР-НИ-КА 🫐|А-ПЕЛЬ-СИН 🍊|КА-РАН-ДАШ ✏️|ПИ-РО-ГИ 🥟|КУ-РИ-ЦА 🐔`)},
+  {name:'Длинные',ex:'ЧЕ-РЕ-ПА-ХА',note:'4–5 слогов и трудные слова',list:W(`ЧЕ-РЕ-ПА-ХА 🐢|КУ-КУ-РУ-ЗА 🌽|ВЕ-ЛО-СИ-ПЕД 🚲|ЗЕМ-ЛЯ-НИ-КА 🍓|МО-РО-ЖЕ-НО-Е 🍦|БА-ЛЕ-РИ-НА 🩰|О-БЕЗЬ-Я-НА 🐒|ГУ-СЕ-НИ-ЦА 🐛|Е-ДИ-НО-РОГ 🦄|КРО-КО-ДИЛ 🐊|ВЕР-ТО-ЛЁТ 🚁|ДИ-НО-ЗАВР 🦕|КЕН-ГУ-РУ 🦘|СВЕ-ТО-ФОР 🚦|ЧЕ-МО-ДАН 🧳|БА-РА-БАН 🥁|ПА-РА-ШЮТ 🪂|ОСЬ-МИ-НОГ 🐙|ПОД-СОЛ-НУХ 🌻|ПИЦ-ЦА 🍕`)},
+];
 const STICKERS='🦄🐱🐶🦊🐼🐨🐯🦁🐸🐵🐧🦋🐞🐢🐬🐳🦖🌈⭐🍓🍦🧁🎈🎀🌻🌸🍭🚀👑💎🎠🐰🦔🐝🐙🦩🦜'.split('');
 
 /* Хранилище */
 const KEY='slogi:v1';
-let S={stars:0,step:0,stats:{},stickers:[]};
+let S={stars:0,step:0,stats:{},stickers:[],track:'syl',wstep:0,wstats:{}};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const $=id=>document.getElementById(id);
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const isV=ch=>'АОУЫИЭЕЯЮЁ'.includes(ch);
-const html=syl=>[...syl].map(ch=>`<span class="${isV(ch)?'v':'c'}">${ch}</span>`).join('');
+const html=syl=>[...syl].map(ch=>`<span class="${isV(ch)?'v':'ЬЪ'.includes(ch)?'z':'c'}">${ch}</span>`).join('');
 
 function sylls(step){
   const st=STEPS[step],out=[];
@@ -192,6 +229,11 @@ function sylls(step){
 function mastery(step){
   const L=sylls(step);let good=0;
   L.forEach(s=>{const x=S.stats[s];if(x&&x.ok>=2&&x.ok>=2*x.bad)good++;});
+  return Math.round(100*good/L.length);
+}
+function wmastery(i){
+  const L=WSTEPS[i].list;let good=0;
+  L.forEach(w=>{const x=S.wstats[w.t];if(x&&x.ok>=2&&x.ok>=2*x.bad)good++;});
   return Math.round(100*good/L.length);
 }
 function wordsFor(step){
@@ -217,8 +259,18 @@ const PRAISE=['Да!','Верно!','Молодец!','Отлично!','Умн�
 /* Меню */
 function renderMenu(){
   $('stars').textContent=S.stars;
+  const isW=S.track==='words';
+  $('tabSyl').setAttribute('aria-pressed',!isW);$('tabW').setAttribute('aria-pressed',isW);
+  $('tipW').hidden=!isW;$('tipS').hidden=isW;
   const box=$('steps');box.innerHTML='';
-  STEPS.forEach((st,i)=>{
+  if(isW){
+    WSTEPS.forEach((st,i)=>{
+      const b=document.createElement('button');b.className='step';b.setAttribute('aria-pressed',S.wstep===i);
+      b.innerHTML=`<span class="n">${i+1}</span><span class="body"><span class="let">${st.ex.split('-').map(html).join('<span style="color:var(--muted)">-</span>')}</span><br><small>${st.name}: ${st.note}</small></span><span class="pct">${wmastery(i)}%</span>`;
+      b.onclick=()=>{S.wstep=i;save();renderMenu();};
+      box.appendChild(b);
+    });
+  }else STEPS.forEach((st,i)=>{
     const b=document.createElement('button');b.className='step';b.setAttribute('aria-pressed',S.step===i);
     const newC=i?[...st.c].filter(c=>!STEPS[i-1].c.includes(c)).join(''):st.c;
     const newV=i?[...st.v].filter(v=>!STEPS[i-1].v.includes(v)).join(''):st.v;
@@ -226,6 +278,7 @@ function renderMenu(){
     b.onclick=()=>{S.step=i;save();renderMenu();};
     box.appendChild(b);
   });
+  $('start').textContent=isW?'Читать слова · 10 заданий':'Играть · 2 минуты';
   const A=$('album');
   A.innerHTML=S.stickers.length?S.stickers.map(s=>`<span>${s}</span>`).join(''):'<span class="empty">За каждую игру — новая наклейка.</span>';
 }
@@ -248,8 +301,21 @@ function plan(){
   if(W.length)T.push({type:'word',word:rnd(W)});else push('find');
   return T;
 }
+function weightedWord(list,avoid){
+  const L=list.filter(w=>!avoid.has(w.t));
+  const w=L.map(x=>{const s=S.wstats[x.t]||{ok:0,bad:0};return Math.max(0.3,1+2.5*s.bad-0.5*Math.min(s.ok,4)+(s.ok+s.bad?0:1.2));});
+  let r=Math.random()*w.reduce((a,b)=>a+b,0);
+  for(let i=0;i<L.length;i++){r-=w[i];if(r<=0)return L[i];}
+  return L[L.length-1];
+}
+function wplan(){
+  const list=WSTEPS[S.wstep].list,used=new Set();
+  return ['readw','build','pick','readw','build','pick','build','readw','pick','build'].map(type=>{
+    const word=weightedWord(list,used);used.add(word.t);return {type,word};
+  });
+}
 function start(){
-  G={tasks:plan(),i:0,res:[],findOk:0,findAll:0};
+  G={tasks:S.track==='words'?wplan():plan(),i:0,res:[],findOk:0,findAll:0};
   show('play');next();
 }
 function show(id){['menu','play','done'].forEach(s=>$(s).hidden=s!==id);$('homeBtn').hidden=id==='menu';if(id==='menu')renderMenu();}
@@ -268,7 +334,7 @@ function next(){
   rail();
   const t=G.tasks[G.i],st=$('stage');
   st.className='stage';st.innerHTML='';$('controls').innerHTML='';
-  ({merge,find,train,word})[t.type](t,st,$('controls'));
+  ({merge,find,train,word,readw,build,pick})[t.type](t,st,$('controls'));
 }
 
 /* 1. Догонялки: согласная бежит к гласной */
@@ -376,11 +442,108 @@ function word(t,st,ctl){
   };
 }
 
+/* ---------- Слова ---------- */
+function wmark(w,ok){const x=S.wstats[w.t]||(S.wstats[w.t]={ok:0,bad:0});ok?x.ok++:x.bad++;save();}
+function wsize(w){const n=w.t.replace(/-/g,'').length+(w.s.length-1)*0.4;const px=Math.min(84,520/n);return `min(${px}px, ${(px/4.1).toFixed(1)}vw)`;}
+function wordHTML(w){return `<div class="wd" style="font-size:${wsize(w)}">${w.s.map((s,i)=>`<span class="sy" data-i="${i}">${html(s)}</span>`).join('')}</div>`;}
+function bindSyl(st,w){st.querySelectorAll('.sy').forEach(el=>el.onclick=()=>{el.classList.add('lit');say(w.s[+el.dataset.i],0.8).then(()=>el.classList.remove('lit'));});}
+const shakeStage=st=>{st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');};
+const plainW=w=>w.t.replace(/-/g,'');
+
+/* Похожее слово: меняем одну букву на букву того же типа (КОЗА → КОСА, РОЗА) */
+const CSET='МЛНРСВШЗПТКБДГЖ',VSET='АОУЫИ';
+function similar(w,n){
+  const t=w.t,out=new Set();let guard=0;
+  while(out.size<n&&guard++<200){
+    const pos=[...t].map((ch,i)=>i).filter(i=>CSET.includes(t[i])||VSET.includes(t[i]));
+    const i=rnd(pos),set=CSET.includes(t[i])?CSET:VSET;
+    const ch=rnd([...set].filter(x=>x!==t[i]));
+    const nt=t.slice(0,i)+ch+t.slice(i+1);
+    if(nt!==t&&!/(Ж|Ш)Ы|(К|Г)Ы/.test(nt.replace(/-/g,'')))out.add(nt);
+  }
+  return [...out].map(x=>({t:x,s:x.split('-')}));
+}
+
+/* 5. Прочитай слово: картинка спрятана, 💡 открывает её как подсказку */
+function readw(t,st,ctl){
+  const w=t.word;let helped=false;
+  st.innerHTML=`<div class="task">Прочитай слово</div>${wordHTML(w)}
+    <button class="peek" id="peek" aria-label="Подсказка-картинка">💡</button>
+    <div class="sub">Нажми на слог, если трудно. 💡 покажет картинку</div>`;
+  bindSyl(st,w);
+  st.querySelectorAll('.sy').forEach(el=>el.addEventListener('click',()=>{helped=true;}));
+  $('peek').onclick=()=>{helped=true;$('peek').outerHTML=`<div class="hintpic pop">${w.e}</div>`;};
+  ctl.innerHTML=`<div class="actions"><button class="act" id="slow"><span class="e">🐢</span>По слогам</button><button class="act yes" id="ok"><span class="e">✓</span>Прочитала</button></div>`;
+  $('slow').onclick=async()=>{helped=true;const els=[...st.querySelectorAll('.sy')];for(const el of els){el.classList.add('lit');await say(w.s[+el.dataset.i],0.75);el.classList.remove('lit');}};
+  $('ok').onclick=async()=>{
+    ctl.innerHTML='';
+    const p=$('peek');if(p)p.outerHTML=`<div class="hintpic pop">${w.e}</div>`;
+    st.classList.add('good');wmark(w,!helped);
+    await say(plainW(w),0.9);
+    done(!helped);
+  };
+}
+
+/* 6. Собери слово: картинка видна, слоги перепутаны + один лишний */
+function build(t,st,ctl){
+  const w=t.word;
+  const units=w.s.length>1?w.s.slice():[...w.t];
+  let extra;
+  if(w.s.length>1){
+    const pool=WSTEPS[S.wstep].list.flatMap(x=>x.s).filter(s=>!units.includes(s));
+    extra=rnd(pool.filter(s=>s[0]===units[0][0]||s.slice(-1)===units[0].slice(-1)).concat(pool));
+  }else extra=rnd([...(isV(units[1]||'А')?CSET:CSET+VSET)].filter(ch=>!units.includes(ch)));
+  const pieces=shuffle(units.concat(extra));
+  st.innerHTML=`<div class="task">Собери слово</div>
+    <div class="hintpic">${w.e}</div>
+    <div class="slots">${units.map((_,i)=>`<div class="slot" data-i="${i}"></div>`).join('')}</div>
+    <div class="pieces">${pieces.map((p,i)=>`<button class="piece" data-i="${i}">${html(p)}</button>`).join('')}</div>`;
+  let k=0,miss=false;
+  st.querySelectorAll('.piece').forEach(b=>b.onclick=async()=>{
+    const p=pieces[+b.dataset.i];
+    if(p===units[k]){
+      const slot=st.querySelector(`.slot[data-i="${k}"]`);slot.innerHTML=html(p);slot.classList.add('full');b.disabled=true;
+      if(w.s.length>1)say(p,0.85);
+      k++;
+      if(k===units.length){st.classList.add('good');wmark(w,!miss);await say(plainW(w),0.9);done(!miss);}
+    }else{miss=true;shakeStage(st);if(w.s.length>1)say(p,0.85);}
+  });
+  ctl.innerHTML=`<div class="actions"><button class="act" id="hearW"><span class="e">🔊</span>Как звучит слово?</button></div>`;
+  $('hearW').onclick=()=>{miss=true;say(plainW(w),0.8);};
+}
+
+/* 7. Какое слово? Картинка видна, слова похожи — нужно прочитать */
+function pick(t,st,ctl){
+  const w=t.word;
+  const opts=shuffle([w,...similar(w,2)]);
+  st.innerHTML=`<div class="task">Какое слово подходит к картинке?</div>
+    <div class="hintpic">${w.e}</div>
+    <div class="wchoices">${opts.map((o,i)=>`<button class="wchoice" data-i="${i}">${wordHTML(o).replace(/font-size:[^"]+/,'font-size:min(46px, 11vw)')}</button>`).join('')}</div>`;
+  let first=true;
+  st.querySelectorAll('.wchoice').forEach(b=>b.onclick=async()=>{
+    const o=opts[+b.dataset.i];
+    if(o===w){
+      b.classList.add('right');st.querySelectorAll('.wchoice').forEach(x=>x.disabled=true);
+      st.classList.add('good');wmark(w,first);await say(rnd(PRAISE)+' '+plainW(w),0.9);done(first);
+    }else{
+      b.classList.add('wrong');b.disabled=true;first=false;shakeStage(st);
+      say('Это '+o.t.replace(/-/g,'')+'. Ищи ещё',0.9);
+    }
+  });
+}
+
 function finish(){
   const sticker=rnd(STICKERS.filter(s=>!S.stickers.includes(s)).concat(S.stickers.length>=STICKERS.length?STICKERS:[]));
   S.stickers.push(sticker);save();
   show('done');
   $('doneSticker').textContent=sticker;
+  if(S.track==='words'){
+    const ok=G.res.filter(Boolean).length,m=wmastery(S.wstep);
+    $('doneTitle').textContent=ok>=8?'Здорово! Новая наклейка!':'Молодец! Новая наклейка!';
+    $('doneNote').textContent=`Без подсказок: ${ok} из ${G.tasks.length}. `+(m>=80&&S.wstep<WSTEPS.length-1?`Ступенька «${WSTEPS[S.wstep].name}» освоена на ${m}%. Можно переходить к «${WSTEPS[S.wstep+1].name}».`:`Ступенька «${WSTEPS[S.wstep].name}»: ${m}%. Трудные слова будут попадаться чаще.`);
+    say(rnd(['Ура! Новая наклейка!','Молодец! Держи наклейку!']),1);
+    return;
+  }
   const acc=G.findAll?G.findOk/G.findAll:0,m=mastery(S.step);
   $('doneTitle').textContent=acc>=.8?'Здорово! Новая наклейка!':'Молодец! Новая наклейка!';
   $('doneNote').textContent=m>=80&&S.step<STEPS.length-1
@@ -392,6 +555,8 @@ function finish(){
 $('start').onclick=()=>{if(hasVoice)try{speechSynthesis.cancel();}catch(e){}start();};
 $('again').onclick=start;
 $('toMenu').onclick=()=>show('menu');
+$('tabSyl').onclick=()=>{S.track='syl';save();renderMenu();};
+$('tabW').onclick=()=>{S.track='words';save();renderMenu();};
 $('homeBtn').onclick=()=>{if(hasVoice)try{speechSynthesis.cancel();}catch(e){}show('menu');};
 renderMenu();
 })();
